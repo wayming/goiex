@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  goiex-postgres-server:
+    image: goiex-postgres-centos
+    ports:
+      - "5423:5432"
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data"
+  goiex-app:
+    image: goiex-app
+
+volumes:
+  postgres-data:
