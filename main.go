@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	token := os.Getenv("IEX_SANDBOX_TOKEN")
+	token := os.Getenv("IEX_TOKEN")
 	if len(token) == 0 {
 		log.Fatal("Failed to read IEX_SANDBOX_TOKEN environment variable")
 	}

@@ -1,3 +1,4 @@
-FROM alpine:3.13
-RUN apk add --no-cache postgresql-client
+FROM golang
+RUN apt-get update
+RUN apt-get install -y postgresql-client
 CMD tail -f /dev/null

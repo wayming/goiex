@@ -3,12 +3,28 @@ version: "3.9"
 services:
   goiex-postgres-server:
     image: goiex-postgres-centos
+    networks:
+      dev:
+        aliases:
+          - db
     ports:
       - "5423:5432"
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
   goiex-app:
     image: goiex-app
+    networks:
+      dev:
+        aliases:
+          - app
+    environment:
+        - PG_CONNECT=postgres://${PG_USER}:${PG_PASSWORD}@db/${PG_DB}
+        - IEX_TOKEN=${IEX_SANDBOX_TOKEN}
+    volumes:
+      - ./app/bin:/run
 
 volumes:
   postgres-data:
+
+networks:
+  dev:
