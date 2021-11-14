@@ -1,6 +1,11 @@
 FROM centos
 ENV container docker
 
+
+# ARGS
+ARG DB_USER
+ARG DB_PASSWORD
+ARG DB_NAME
 # Set to POXIS locale
 ENV LC_ALL POSIX 
 ENV LANG POSIX 
@@ -35,10 +40,6 @@ RUN rm -vf /lib/systemd/system/sysinit.target.wants/* \
   ; rm -vf /lib/systemd/system/sockets.target.wants/*initctl* \
   ; rm -vf /lib/systemd/system/basic.target.wants/*
 
-# DB user
-ENV PG_USER "test"
-ENV PG_PASSWORD "test"
-
 # DB setup
 # Updates postgres configuration parameters so that it can be started in the container
 RUN /usr/pgsql-13/bin/postgresql-13-setup initdb
@@ -51,8 +52,7 @@ COPY dbsetup.sh /opt
 RUN  chmod +x /opt/dbsetup.sh
 
 USER postgres
-RUN  whoami
-RUN  /opt/dbsetup.sh
+RUN  /opt/dbsetup.sh ${DB_USER} ${DB_PASSWORD} ${DB_NAME}
 
 USER root
 RUN  whoami

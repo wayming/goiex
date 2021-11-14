@@ -1,9 +1,19 @@
-#!/bin/bash
+#!/bin/sh
 # Run as postgres
 set -x
-dbusr=test
-dbpwd=test
-dbname=testdb
+
+die () {
+    echo >&2 "$@"
+    exit 1
+}
+
+if [ "$#" -ne 3 ]; then
+    die "Usage: $0 <dbuser> <dbpassword> <dbname>"
+fi
+
+dbusr=$1
+dbpwd=$2
+dbname=$3
 
 /usr/pgsql-13/bin/pg_ctl start -D /var/lib/pgsql/13/data
 

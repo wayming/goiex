@@ -9,6 +9,10 @@ services:
           - db
     ports:
       - "5423:5432"
+    environment:
+        - DB_USER
+        - DB_PASSWORD
+        - DB_NAME
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
   goiex-app:
@@ -18,10 +22,13 @@ services:
         aliases:
           - app
     environment:
-        - PG_CONNECT=postgres://${PG_USER}:${PG_PASSWORD}@db/${PG_DB}
+        - DB_USER
+        - DB_PASSWORD
+        - DB_NAME
+        - PG_CONNECT=postgres://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}
         - IEX_TOKEN=${IEX_SANDBOX_TOKEN}
     volumes:
-      - ./app/bin:/run
+      - ./app/src:/app
 
 volumes:
   postgres-data:
