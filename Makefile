@@ -1,17 +1,18 @@
 # Varibles
-IEX_APP=goiex
+GOIEX_HOME=`pwd`
+IEX_APP=app/bin/goiex
 APP_DOCKER_FILE=app/Dockerfile
 PG_DOCKER_FILE=pg/Dockerfile
 IMAGES=goiex-postgres-centos goiex-app
 # Rules
 all: build down up
 
-build: ${IEX_APP} docker_build
+build: build_app build_docker
 
-${IEX_APP}: app/src/main.go
-	(cd app/src; go build -o ../bin/$@ main.go)
+build_app: app/src/Makefile
+	make -C app/src
 
-docker_build: ${IMAGES}
+build_docker: ${IMAGES}
 
 goiex-postgres-centos: ${PG_DOCKER_FILE}
 	(cd pg; docker build --rm --progress=plain --build-arg DB_USER=${DB_USER} --build-arg DB_PASSWORD=${DB_PASSWORD} --build-arg DB_NAME=${DB_NAME} -t $@ .)

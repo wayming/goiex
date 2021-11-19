@@ -8,7 +8,7 @@ services:
         aliases:
           - db
     ports:
-      - "5423:5432"
+      - "5432:5432"
     environment:
         - DB_USER
         - DB_PASSWORD
@@ -21,6 +21,8 @@ services:
       dev:
         aliases:
           - app
+    ports:
+      - "8080:8080"
     environment:
         - DB_USER
         - DB_PASSWORD
@@ -29,6 +31,8 @@ services:
         - IEX_TOKEN=${IEX_SANDBOX_TOKEN}
     volumes:
       - ./app/src:/app
+    depends_on:
+      - goiex-postgres-server
 
 volumes:
   postgres-data:

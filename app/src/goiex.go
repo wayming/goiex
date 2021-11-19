@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	_ "github.com/lib/pq"
 )
 
@@ -25,7 +27,7 @@ var (
 	token      = os.Getenv("IEX_TOKEN")
 )
 
-func main() {
+func getSymbols(c *gin.Context) {
 
 	if len(token) == 0 {
 		log.Fatal("Failed to read IEX_SANDBOX_TOKEN environment variable")
@@ -67,7 +69,9 @@ func main() {
 	for _, symbol := range symbols {
 		fmt.Println(symbol["symbol"])
 	}
-
+	c.IndentedJSON(http.StatusOK, symbols)
+}
+func ping(c *gin.Context) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 	db, err := sql.Open("postgres", psqlInfo)
@@ -82,4 +86,11 @@ func main() {
 	}
 
 	fmt.Println("Successfully connected to ", psqlInfo)
+	c.IndentedJSON(http.StatusOK, psqlInfo)
+}
+func main() {
+	router := gin.Default()
+	router.GET("/symbols", getSymbols)
+	router.GET("/ping", ping)
+	router.Run(":8080")
 }
