@@ -1,0 +1,48 @@
+schema iex:
+  DB_USER: test
+  privileges:
+  - test:
+    - all
+  - alice:
+    - all
+  table iex_symbols:
+    columns:
+    - cik:
+         not_null: true
+         type: character varying(16)
+    - currency:
+         type: character varying(4)
+    - date:
+         type: date
+    - exchange:
+         type: character varying(4)
+    - exchangeName:
+         type: character varying(32)
+    - exchangeSuffix:
+         type: character varying(4)
+    - figi:
+         type: character varying(16)
+    - iexId:
+         type: character varying(32)
+    - isEnabled:
+         type: boolean
+    - lei:
+         type: character varying(32)
+    - name:
+         type: character varying(16)
+    - region:
+         type: character varying(4)
+    - symbol:
+         type: character varying(4)
+    - type:
+         type: character varying(4)
+    DB_USER: test
+    primary_key:
+      iex_symbols_pkey:
+        columns:
+        - cik
+    privileges:
+    - test:
+      - all
+    - PUBLIC:
+      - select

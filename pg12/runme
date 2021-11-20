@@ -1,0 +1,6 @@
+docker build --rm --progress=plain -t goiex-postgres-centos .
+# Add --tmpfs /run makes the postgres service not runnable. The directory /var/run/postgresql becomes non-persistent. Error:
+# FATAL:  could not create lock file "/var/run/postgresql/.s.PGSQL.5432.lock": No such file or directory
+# The options "--tmpfs /run -v /sys/fs/cgroup:/sys/fs/cgroup:ro" are only needed when running with real systemd command.
+docker kill pg; docker system prune -f; docker run --privileged -d --name pg goiex-postgres-centos
+docker exec -it pg bash

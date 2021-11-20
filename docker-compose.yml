@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   goiex-postgres-server:
-    image: goiex-postgres-centos
+    image: goiex-postgres12-centos
     networks:
       dev:
         aliases:
@@ -13,8 +13,10 @@ services:
         - DB_USER
         - DB_PASSWORD
         - DB_NAME
+        - PG_CONNECT=postgres://${DB_USER}:${DB_PASSWORD}@localhost/${DB_NAME}
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
+
   goiex-app:
     image: goiex-app
     networks:
@@ -30,7 +32,7 @@ services:
         - PG_CONNECT=postgres://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}
         - IEX_TOKEN=${IEX_SANDBOX_TOKEN}
     volumes:
-      - ./app/src:/app
+      - ./app:/app
     depends_on:
       - goiex-postgres-server
 
