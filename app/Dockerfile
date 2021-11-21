@@ -6,7 +6,7 @@ RUN apt-get install -y postgresql-client
 RUN mkdir /go/src/goiex
 WORKDIR /go/src/goiex
 ENV GOBIN=/go/bin
-COPY src/go* .
+ADD src .
 
 RUN go install .
 CMD /go/bin/goiex

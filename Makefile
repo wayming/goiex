@@ -4,7 +4,7 @@ IEX_APP=app/bin/goiex
 APP_DOCKER_FILE=app/Dockerfile
 PG13_DOCKER_FILE=pg13/Dockerfile
 PG12_DOCKER_FILE=pg12/Dockerfile
-IMAGES=goiex-postgres13-centos goiex-postgres12-centos goiex_app
+IMAGES=goiex-postgres12-centos goiex-app goiex-app-dev
 # Rules
 all: build down up
 
@@ -21,8 +21,11 @@ goiex-postgres13-centos: ${PG13_DOCKER_FILE}
 goiex-postgres12-centos: ${PG12_DOCKER_FILE}
 	(cd pg12; docker build --rm --progress=plain --build-arg DB_USER=${DB_USER} --build-arg DB_PASSWORD=${DB_PASSWORD} --build-arg DB_NAME=${DB_NAME} -t $@ .)
 
-goiex_app: ${APP_DOCKER_FILE}
+goiex-app: ${APP_DOCKER_FILE}
 	(cd app; docker build --rm --progress=plain -t $@ .)
+
+goiex-app-dev: ${APP_DOCKER_FILE}
+	(cd app; docker build --rm --progress=plain -t $@ -f Dockerfile.dev .)
 
 up: docker-compose.yml .env
 	docker-compose up -d
@@ -38,3 +41,6 @@ login_app:
 
 login_db:
 	docker exec -it goiex_goiex-postgres-server_1 bash
+
+log_app:
+	docker logs -f goiex_goiex-app_1

@@ -21,8 +21,9 @@ RUN dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x
 
 # Install PostgreSQL and tools:
 RUN dnf install -y postgresql${DB_VERSION}-server
-RUN dnf install -y python3 platform-python-devel.x86_64 libpq-devel.x86_64
+RUN dnf install -y gcc python3 platform-python-devel.x86_64 libpq-devel.x86_64
 RUN dnf install -y net-tools gettext
+RUN pip3 install Pyrseas
 ENV PATH="/usr/pgsql-${DB_VERSION}/bin:${PATH}"
 RUN alternatives --set python /usr/bin/python3
 

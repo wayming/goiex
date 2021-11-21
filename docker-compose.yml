@@ -18,7 +18,8 @@ services:
       - "postgres-data:/var/lib/postgresql/data"
 
   goiex-app:
-    image: goiex-app
+    image: goiex-app-dev
+    #command: tail -f /dev/null
     networks:
       dev:
         aliases:

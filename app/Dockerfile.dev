@@ -1,0 +1,6 @@
+FROM goiex_app
+
+WORKDIR /go
+ADD tools /go/src
+RUN cd /go/src/watcher && go install
+CMD cd /app/src && gowatcher goiex.go

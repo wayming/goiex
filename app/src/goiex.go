@@ -71,6 +71,7 @@ func getSymbols(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, symbols)
 }
+
 func ping(c *gin.Context) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
