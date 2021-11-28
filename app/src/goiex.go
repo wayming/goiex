@@ -89,6 +89,7 @@ func ping(c *gin.Context) {
 	fmt.Println("Successfully connected to ", psqlInfo)
 	c.IndentedJSON(http.StatusOK, psqlInfo)
 }
+
 func main() {
 	router := gin.Default()
 	router.GET("/symbols", getSymbols)

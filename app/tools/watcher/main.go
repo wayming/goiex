@@ -11,24 +11,28 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-func goRunCommand(cmdStr string) (pid string) {
-	log.Println("Run command [go run", cmdStr, "]")
-	cmd := exec.Command("go", "run", cmdStr)
-	err := cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pid = strconv.Itoa(cmd.Process.Pid)
-	go func() {
-		err = cmd.Wait()
+func runCommand(cmdStr string, restart <-chan bool) {
+	for {
+		cmd := exec.Command("go", "run", cmdStr)
+		err := cmd.Start()
 		if err != nil {
-			log.Println("Command finished with error: ", err)
+			log.Fatal(err)
 		}
-	}()
-	log.Println("Pid =", pid)
 
-	return
+		pid := strconv.Itoa(cmd.Process.Pid)
+		log.Println("Started command [go run", cmdStr, "] pid =", pid)
+
+		// Block until told restart
+		<-restart
+
+		if err = cmd.Process.Kill(); err != nil {
+			log.Println("Failed to kill process ", pid, ", error ", err)
+		}
+		log.Println("Terminate command [go run", cmdStr, "] pid =", pid)
+
+		// Wait until process is terminated. Ignore error.
+		cmd.Wait()
+	}
 }
 
 func getFileModifiedTime(fileName string) (lastModifiedTime time.Time) {
@@ -54,11 +58,13 @@ func main() {
 	}
 	defer watcher.Close()
 
-	done := make(chan bool)
-	var writeEventHandler sync.Mutex
+	var watcherWaitGroup sync.WaitGroup
 	lastModifiedTime := getFileModifiedTime(watchedFile)
+	watcherWaitGroup.Add(1)
 	go func() {
-		goPid := goRunCommand(watchedFile)
+		defer watcherWaitGroup.Done()
+		processRestart := make(chan bool)
+		go runCommand(watchedFile, processRestart)
 		for {
 			select {
 			case event, ok := <-watcher.Events:
@@ -76,28 +82,11 @@ func main() {
 					}
 
 					log.Println("modified file:", event.Name)
-					writeEventHandler.Lock()
-					pidChan := make(chan string)
-					go func() {
-						pidToKill := <-pidChan
-						log.Println("pKill process", pidToKill)
-						out, err := exec.Command("pkill", "-P", "-9", pidToKill).Output()
-						if err != nil {
-							log.Fatal(err)
-						} else {
-							log.Println(out)
-						}
-
-						pidChan <- goRunCommand(watchedFile)
-					}()
-					pidChan <- goPid
-					goPid = <-pidChan
+					processRestart <- true
 					lastModifiedTime = modifiedTime
-					writeEventHandler.Unlock()
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
-					done <- true
 					return
 				}
 				log.Println("error:", err)
@@ -109,5 +98,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	<-done
+
+	watcherWaitGroup.Wait()
 }
