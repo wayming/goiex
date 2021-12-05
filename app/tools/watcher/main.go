@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -16,6 +17,7 @@ import (
 func runCommand(cmdStr string, restart <-chan bool) {
 	for {
 		cmd := exec.Command("go", "run", cmdStr)
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 		// create a pipe for the output of the script
 		stdoutReader, err := cmd.StdoutPipe()
@@ -49,7 +51,7 @@ func runCommand(cmdStr string, restart <-chan bool) {
 		// Block until told restart
 		<-restart
 
-		if err = cmd.Process.Kill(); err != nil {
+		if err = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
 			log.Println("Failed to kill process ", pid, ", error ", err)
 		}
 		log.Println("Terminate command [go run", cmdStr, "] pid =", pid)
