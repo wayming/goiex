@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -17,13 +18,20 @@ func runCommand(cmdStr string, restart <-chan bool) {
 		cmd := exec.Command("go", "run", cmdStr)
 
 		// create a pipe for the output of the script
-		cmdReader, err := cmd.StdoutPipe()
+		stdoutReader, err := cmd.StdoutPipe()
 		if err != nil {
 			log.Println("Error creating StdoutPipe for Cmd. ", err)
 			return
 		}
 
-		scanner := bufio.NewScanner(cmdReader)
+		stderrReader, err := cmd.StderrPipe()
+		if err != nil {
+			log.Println("Error creating StderrPipe for Cmd. ", err)
+			return
+		}
+
+		childOutputReader := io.MultiReader(stdoutReader, stderrReader)
+		scanner := bufio.NewScanner(childOutputReader)
 		go func() {
 			for scanner.Scan() {
 				log.Println("\t > ", scanner.Text())
@@ -62,6 +70,8 @@ func getFileModifiedTime(fileName string) (lastModifiedTime time.Time) {
 }
 
 func main() {
+
+	log.SetOutput(os.Stdout)
 
 	if len(os.Args) != 2 {
 		log.Fatal(("Usage: gowatcher <file>"))

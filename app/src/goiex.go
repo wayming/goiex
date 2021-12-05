@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,7 +29,7 @@ var (
 )
 
 func getSymbols(c *gin.Context) {
-
+	log.Println("getSymbols request.")
 	if len(token) == 0 {
 		log.Fatal("Failed to read IEX_SANDBOX_TOKEN environment variable")
 	}
@@ -67,7 +68,7 @@ func getSymbols(c *gin.Context) {
 	}
 
 	for _, symbol := range symbols {
-		fmt.Println(symbol["symbol"])
+		log.Println(symbol["symbol"])
 	}
 	c.IndentedJSON(http.StatusOK, symbols)
 }
@@ -86,11 +87,17 @@ func ping(c *gin.Context) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Successfully connected to ", psqlInfo)
+	log.Println("Successfully connected to", psqlInfo)
 	c.IndentedJSON(http.StatusOK, psqlInfo)
 }
 
 func main() {
+	fileWriter, err := os.OpenFile("goiex.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	outputWriter := io.MultiWriter(fileWriter, os.Stdout)
+	log.SetOutput(outputWriter)
 	router := gin.Default()
 	router.GET("/symbols", getSymbols)
 	router.GET("/ping", ping)
