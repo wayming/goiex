@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"log"
 	"os"
 	"os/exec"
@@ -14,7 +15,22 @@ import (
 func runCommand(cmdStr string, restart <-chan bool) {
 	for {
 		cmd := exec.Command("go", "run", cmdStr)
-		err := cmd.Start()
+
+		// create a pipe for the output of the script
+		cmdReader, err := cmd.StdoutPipe()
+		if err != nil {
+			log.Println("Error creating StdoutPipe for Cmd. ", err)
+			return
+		}
+
+		scanner := bufio.NewScanner(cmdReader)
+		go func() {
+			for scanner.Scan() {
+				log.Println("\t > ", scanner.Text())
+			}
+		}()
+
+		err = cmd.Start()
 		if err != nil {
 			log.Fatal(err)
 		}
