@@ -7,19 +7,23 @@ schema iex:
     columns:
     - cik:
          not_null: true
-         type: character varying(16)
+         type: character varying(32)
     - currency:
-         type: character varying(4)
+         type: character varying(8)
     - date:
          type: date
     - exchange:
-         type: character varying(4)
+         type: character varying(8)
     - exchangeName:
          type: character varying(32)
+    - exchangeSegment:
+         type: character varying(8)
+    - exchangeSegmentName:
+         type: character varying(32)
     - exchangeSuffix:
-         type: character varying(4)
+         type: character varying(8)
     - figi:
-         type: character varying(16)
+         type: character varying(32)
     - iexId:
          type: character varying(32)
     - isEnabled:
@@ -27,18 +31,18 @@ schema iex:
     - lei:
          type: character varying(32)
     - name:
-         type: character varying(16)
+         type: character varying(128)
     - region:
-         type: character varying(4)
+         type: character varying(8)
     - symbol:
-         type: character varying(4)
+         type: character varying(8)
     - type:
-         type: character varying(4)
+         type: character varying(8)
     owner: $DB_USER
     primary_key:
       iex_symbols_pkey:
         columns:
-        - cik
+        - symbol
     privileges:
     - $DB_USER:
       - all
