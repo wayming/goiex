@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -13,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-
+	"github.com/go-redis/redis/v8"
 	_ "github.com/lib/pq"
 )
 
@@ -25,6 +26,8 @@ const (
 	pgTypeBool      = "boolean"
 	colAttrDataType = "datatype"
 	tableSymbols    = "symbols"
+	redisHost       = "redis"
+	redisPort       = 6379
 )
 
 var (
@@ -243,6 +246,8 @@ func ping(c *gin.Context) {
 }
 
 func main() {
+
+	// Initialise Log
 	fileWriter, err := os.OpenFile("goiex.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln(err)
@@ -250,13 +255,30 @@ func main() {
 	outputWriter := io.MultiWriter(fileWriter, os.Stdout)
 	log.SetOutput(outputWriter)
 
+	// Connect to database
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
+	log.Println("postgres connect: ", psqlInfo)
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer db.Close()
+
+	// Connect to redis
+	ctx := context.Background()
+	redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
+	log.Println("redis connect: ", redisAddr)
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: "",
+		DB:       0,
+	})
+	pong, err := client.Ping(ctx).Result()
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Ping redis, result ", pong)
 
 	router := gin.Default()
 	router.GET("/load", loadSymbols)

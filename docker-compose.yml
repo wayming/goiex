@@ -16,6 +16,15 @@ services:
         - PG_CONNECT=postgres://${DB_USER}:${DB_PASSWORD}@localhost/${DB_NAME}
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
+      
+  goiex-redis:
+    image: redis
+    networks:
+      dev:
+        aliases:
+          - redis
+    ports:
+      - "6379:6379"
 
   goiex-app:
     image: goiex-app-dev
@@ -36,6 +45,7 @@ services:
       - ./app:/app
     depends_on:
       - goiex-postgres-server
+      - goiex-redis
 
 volumes:
   postgres-data:
