@@ -37,6 +37,8 @@ var (
 	token      = os.Getenv("IEX_TOKEN")
 	psqlInfo   = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
 	db         *sql.DB
+	redisClt   *redis.Client
+	redisCtx   = context.Background()
 )
 
 type colDefinition struct {
@@ -198,40 +200,93 @@ func getSymbols(c *gin.Context) {
 		log.Fatalln("Failed to read IEX_SANDBOX_TOKEN environment variable")
 	}
 
-	sql := "SELECT * FROM iex.symbols"
+	sql := "SELECT symbol FROM iex.symbols"
 	log.Println("Executing sql: ", sql)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println("rows:", rows)
 
-	cols, err := rows.Columns()
-	log.Println("columns:", cols)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	values := make([]interface{}, len(cols))
-	scanArgs := make([]interface{}, len(cols))
-	for idx := range cols {
-		scanArgs[idx] = &values[idx]
-	}
-
-	var symbols []map[string]interface{}
+	var symbolNames []string
+	load := false
 	for rows.Next() {
-		err = rows.Scan(scanArgs...)
+		var symbolName string
+		err := rows.Scan(&symbolName)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		log.Println("values:", values)
-		result := make(map[string]interface{}, len(cols))
-		for idx, col := range cols {
-			result[col] = values[idx]
+
+		num, err := redisClt.Exists(redisCtx, "symbol:"+symbolName).Result()
+		if num == 0 {
+			// There is at least one symble not in the cache, reload all symbols.
+			log.Println(symbolName + " does not exist in cache")
+			load = true
+			break
 		}
-		symbols = append(symbols, result)
+		symbolNames = append(symbolNames, symbolName)
 	}
+
+	var symbols []map[string]interface{}
+	if load {
+		sql = "SELECT * FROM iex.symbols"
+		log.Println("Executing sql: ", sql)
+		rows, err := db.Query(sql)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Println("rows:", rows)
+
+		cols, err := rows.Columns()
+		log.Println("columns:", cols)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		values := make([]interface{}, len(cols))
+		scanArgs := make([]interface{}, len(cols))
+		for idx := range cols {
+			scanArgs[idx] = &values[idx]
+		}
+
+		for rows.Next() {
+			err = rows.Scan(scanArgs...)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Println("values:", values)
+			symbolHash := make(map[string]interface{}, len(cols))
+			for idx, col := range cols {
+				symbolHash[col] = values[idx]
+			}
+			symbols = append(symbols, symbolHash)
+
+			// Write to cache
+			log.Println("Write to cache with key " + "symbol:" + symbolHash["symbol"].(string))
+			err = redisClt.HSet(redisCtx, "symbol:"+symbolHash["symbol"].(string), symbolHash).Err()
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
+	} else {
+		for _, symbolName := range symbolNames {
+			// Read from cache
+			log.Println("Read from cache with key symbol:" + symbolName)
+			symbolStringHash, err := redisClt.HGetAll(redisCtx, "symbol:"+symbolName).Result()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Println(symbolStringHash)
+			symbolHash := make(map[string]interface{}, len(symbolStringHash))
+			for field, value := range symbolStringHash {
+				symbolHash[field] = value
+			}
+			symbols = append(symbols, symbolHash)
+		}
+
+	}
+
 	c.IndentedJSON(http.StatusOK, symbols)
+
 }
 
 func ping(c *gin.Context) {
@@ -266,15 +321,14 @@ func main() {
 	defer db.Close()
 
 	// Connect to redis
-	ctx := context.Background()
 	redisAddr := fmt.Sprintf("%s:%d", redisHost, redisPort)
 	log.Println("redis connect: ", redisAddr)
-	client := redis.NewClient(&redis.Options{
+	redisClt = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
 		Password: "",
 		DB:       0,
 	})
-	pong, err := client.Ping(ctx).Result()
+	pong, err := redisClt.Ping(redisCtx).Result()
 	if err != nil {
 		panic(err)
 	}
