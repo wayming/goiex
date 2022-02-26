@@ -37,10 +37,10 @@ goiex-ngnix: ${NGINX_DOCKER_FILE}
 goiex-ngnix-dev: ${NGINX_DOCKER_FILE_DEV}
 	(cd front; docker build --rm --progress=plain -t $@ -f Dockerfile.dev .)
 
-up: docker-compose.yml .env
+up: docker-compose.yml setenv
 	docker-compose up -d
 
-down: docker-compose.yml .env
+down: docker-compose.yml setenv
 	docker-compose down
 
 clean:

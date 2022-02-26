@@ -1,5 +1,6 @@
 FROM goiex-ngnix
 
+ADD goiex_front /app/goiex_front
 WORKDIR /app/goiex_front
 RUN apk add --update npm
 RUN node --version
