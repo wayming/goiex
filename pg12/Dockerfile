@@ -1,4 +1,4 @@
-FROM centos
+FROM quay.io/centos/centos:stream8
 ENV container docker
 
 

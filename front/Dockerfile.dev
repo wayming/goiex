@@ -1,0 +1,12 @@
+FROM goiex-ngnix
+
+WORKDIR /app/goiex_front
+RUN apk add --update npm
+RUN node --version
+RUN npm --version
+RUN npm install -g nodemon
+RUN npm install
+RUN npm run build
+ENV PORT=80
+ENV PATH="${PATH}:/app/goiex_front/node_modules/.bin"
+CMD ["nodemon", "-x", "npm", "start"]

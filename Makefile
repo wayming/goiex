@@ -2,9 +2,13 @@
 GOIEX_HOME=`pwd`
 IEX_APP=app/bin/goiex
 APP_DOCKER_FILE=app/Dockerfile
+APP_DOCKER_FILE_DEV=app/Dockerfile.dev
 PG13_DOCKER_FILE=pg13/Dockerfile
 PG12_DOCKER_FILE=pg12/Dockerfile
-IMAGES=goiex-postgres12-centos goiex-app goiex-app-dev
+NGINX_DOCKER_FILE=front/Dockerfile
+NGINX_DOCKER_FILE_DEV=front/Dockerfile.dev
+
+IMAGES=goiex-postgres12-centos goiex-app goiex-app-dev goiex-ngnix goiex-ngnix-dev
 # Rules
 all: build down up
 
@@ -24,8 +28,14 @@ goiex-postgres12-centos: ${PG12_DOCKER_FILE}
 goiex-app: ${APP_DOCKER_FILE}
 	(cd app; docker build --rm --progress=plain -t $@ .)
 
-goiex-app-dev: ${APP_DOCKER_FILE}
+goiex-app-dev: ${APP_DOCKER_FILE_DEV}
 	(cd app; docker build --rm --progress=plain -t $@ -f Dockerfile.dev .)
+
+goiex-ngnix: ${NGINX_DOCKER_FILE}
+	(cd front; docker build --rm --progress=plain -t $@ .)
+
+goiex-ngnix-dev: ${NGINX_DOCKER_FILE_DEV}
+	(cd front; docker build --rm --progress=plain -t $@ -f Dockerfile.dev .)
 
 up: docker-compose.yml .env
 	docker-compose up -d

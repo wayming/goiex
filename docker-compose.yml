@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  goiex-postgres-server:
+  goiex-db:
     image: goiex-postgres12-centos
     networks:
       dev:
@@ -17,7 +17,7 @@ services:
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
       
-  goiex-redis:
+  goiex-cache:
     image: redis
     networks:
       dev:
@@ -26,9 +26,19 @@ services:
     ports:
       - "6379:6379"
 
+  goiex-front:
+    image: goiex-ngnix-dev
+    networks:
+      dev:
+        aliases:
+          - front
+    ports:
+      - "80:80"
+    volumes:
+      - ./front/goiex_front:/app/goiex_front
+
   goiex-app:
     image: goiex-app-dev
-    #command: tail -f /dev/null
     networks:
       dev:
         aliases:
@@ -44,8 +54,8 @@ services:
     volumes:
       - ./app:/app
     depends_on:
-      - goiex-postgres-server
-      - goiex-redis
+      - goiex-db
+      - goiex-cache
 
 volumes:
   postgres-data:

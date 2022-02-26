@@ -200,7 +200,15 @@ func getSymbols(c *gin.Context) {
 		log.Fatalln("Failed to read IEX_SANDBOX_TOKEN environment variable")
 	}
 
+	symbolRequested := c.Param("name")
+	if len(symbolRequested) > 0 {
+		log.Println("Get symbole " + symbolRequested)
+	}
+
 	sql := "SELECT symbol FROM iex.symbols"
+	if len(symbolRequested) > 0 {
+		sql += " WHERE symbol = '" + symbolRequested + "'"
+	}
 	log.Println("Executing sql: ", sql)
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -230,6 +238,9 @@ func getSymbols(c *gin.Context) {
 	if load {
 		sql = "SELECT * FROM iex.symbols"
 		log.Println("Executing sql: ", sql)
+		if len(symbolRequested) > 0 {
+			sql += " WHERE symbol = '" + symbolRequested + "'"
+		}
 		rows, err := db.Query(sql)
 		if err != nil {
 			log.Fatalln(err)
@@ -337,6 +348,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/load", loadSymbols)
 	router.GET("/symbols", getSymbols)
+	router.GET("/symbol/:name", getSymbols)
 	router.GET("/ping", ping)
 	router.Run(":8080")
 }
