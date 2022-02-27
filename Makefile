@@ -54,3 +54,6 @@ login_db:
 
 log_app:
 	docker logs -f goiex_goiex-app_1
+
+log_front:
+	docker logs -f goiex_goiex-front_1

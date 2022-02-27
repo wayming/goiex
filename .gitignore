@@ -5,3 +5,4 @@ pg/Readme.txt
 pg/runme
 .env
 front/goiex_front/node_modules
+app/src/goiex.log

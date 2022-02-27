@@ -1,30 +1,49 @@
-import logo from './logo.svg';
-import './App.css';
+import React, {useState, useEffect} from 'react';
+import {Button, Form, Container, Modal } from 'react-bootstrap'
+import axios from "axios";
 
-import Container from 'react-bootstrap/Container';
+import './App.css';
+import Symbol from './symbol.js'
 
 function App() {
+
+  const [symbols, setSymbols] = useState([])
+
   return (
-    <Container>
-        <div className="App">
-          <header className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
-            <p>
-              Edit <code>src/App.js</code> and save to reload-------.
-            </p>
-            <a
-              className="App-link"
-              href="https://reactjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn React
-            </a>
-          </header>
-        </div>
-    </Container>
+    <div>
+      <Container>
+        <Button onClick={() => loadSymbols()}>Load Symbols</Button>
+        <Button onClick={() => getSymbols()}>Get Symbols</Button>
+      </Container>
+
+      <Container>
+          {symbols != null && symbols.map((symbol, i) => (
+              <Symbol symbolData={symbol}/>
+          ))}
+      </Container>
+    </div>
 
   );
+
+  function loadSymbols(){
+    var url = "/load"
+    axios.get(url, { responseType: 'json' }).then(response => {
+        console.log(response.status)
+        if(response.status == 200){
+          setSymbols(response.data)
+        }
+    })
+  }
+    
+  function getSymbols(){
+    var url = "/symbols"
+    axios.get(url, { responseType: 'json' }).then(response => {
+        console.log(response.status)
+        if(response.status == 200){
+          setSymbols(response.data)
+        }
+    })
+  }
 }
 
 export default App;
